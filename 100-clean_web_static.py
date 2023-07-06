@@ -3,10 +3,11 @@
 This is a Fabric script that creates and distributes an archive to web servers using the deploy function.
 """
 
+from fabric.decorators import task
 from fabric.api import env, run, put, local
 from datetime import datetime
-from os.path import exists
-from fabric.api import put
+from os.path import exists, isdir
+from fabric.api import cd
 
 env.hosts = ['100.27.10.107', '100.26.255.78']
 env.user = 'ubuntu'
@@ -90,3 +91,29 @@ def deploy():
         return False
     return do_deploy(archive_path)
 
+
+def do_clean(number=0):
+    """
+    Deletes out-of-date archives.
+
+    Args:
+        number (int): The number of archives to keep, including the most recent.
+
+    Returns:
+        bool: True if all operations have been done correctly, False otherwise.
+    """
+    number = int(number)
+    if number < 0:
+        return False
+    if number in (0, 1):
+        number = 2
+    else:
+        number += 2
+
+    with cd("versions"):
+        local("ls -t | tail -n +{} | xargs -I {{}} rm -- {{}}".format(number))
+
+    with cd("/data/web_static/releases"):
+        run("ls -t | tail -n +{} | xargs -I {{}} rm -rf -- {{}}".format(number))
+
+    return True
