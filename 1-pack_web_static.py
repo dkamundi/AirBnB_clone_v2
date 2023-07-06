@@ -5,7 +5,7 @@ This is a Fabric script that generates a .tgz archive from the contents of the w
 
 from fabric.api import local
 from datetime import datetime
-
+from os import isdir
 
 def do_pack():
     """
@@ -14,14 +14,12 @@ def do_pack():
     Returns:
         str: Archive path if the archive has been correctly generated, None otherwise.
     """
-    now = datetime.now()
-    archive_name = "web_static_" + now.strftime("%Y%m%d%H%M%S") + ".tgz"
-    archive_path = "versions/" + archive_name
-
-    local("mkdir -p versions")
-    result = local("tar -czvf {} web_static".format(archive_path))
-
-    if result.succeeded:
-        return archive_path
-    else:
+    try:
+        date = datetime.now().strftime("%Y%m%d%H%M%S")
+        if isdir("versions") is False:
+            local("mkdir versions")
+        file_name = "versions/web_static_{}.tgz".format(date)
+        local(("tar -cvzf {} web_static".format(file_name))
+        return file_name
+    except:
         return None
